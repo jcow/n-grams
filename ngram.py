@@ -1,14 +1,30 @@
-
+import sys
+import operator
 
 class NGram:
 
-    def __init__(self, words, ngram_size=2,start_word="||S||",end_word="||E||"):
+    def __init__(self, words, ngram_size=2, classification_number=1, start_word="||S||", end_word="||E||"):
 
         self.words = words
         self.ngram_size = ngram_size
         self.ngrams = {}
         self.start_word = start_word
         self.end_word = end_word
+        self.classification_type = 'single'
+        self.classification_number = classification_number
+        self.dictionary = NGram.generate_dict_from_list(words)
+
+
+    def classify(self, word_list):
+        reference = self.ngrams
+        for word in word_list:
+            if word in reference:
+                reference = reference[word]
+            else:
+                return False
+
+        words = NGram.sort_dictionary(reference)
+        return words[0:self.classification_number]
 
     def generate_counts(self):
         counts = {}
@@ -43,3 +59,14 @@ class NGram:
                         reference[word] += 1
 
                     window[i] += 1
+
+    @staticmethod
+    def generate_dict_from_list(word_list):
+        dict = {}
+        for word in word_list:
+            dict[word] = word
+        return dict
+
+    @staticmethod
+    def sort_dictionary(dict):
+        return sorted(dict.iteritems(), key=operator.itemgetter(1), reverse=True)

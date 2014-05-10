@@ -4,6 +4,27 @@ import string
 class Utilities:
 
     @staticmethod
+    def prepare_text(lines):
+        words = Utilities.lines_to_words(lines)
+        words = [Utilities.remove_punc_from_ends(x) for x in words]
+        words = Utilities.remove_empty_words(words)
+        words = [x.lower() for x in words]
+        return words
+
+    @staticmethod
+    def lines_to_words(lines):
+        words = []
+        for line in lines:
+            words.extend(line.split())
+        return words
+
+    @staticmethod
+    def list_lines_to_lower(l):
+        for i in xrange(0, len(l)):
+            l[i] = l[i].lower()
+        return l
+
+    @staticmethod
     def remove_punc_from_ends(word):
         word_length = len(word)
         if word_length == 0:
