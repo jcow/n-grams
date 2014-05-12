@@ -4,94 +4,70 @@ from utilities import *
 from KFold import *
 from ngram import *
 from list_window import *
+from random import shuffle
 
-lines = DirectoryReader.get_lines_from_file("files/harry_potter.txt")
+
+lines = DirectoryReader.get_lines_from_file("files/shakespeare.txt")
 words = Utilities.prepare_text(lines)
 
-
-kfold = KFold(words, step=(len(words)//10))
-
-ngram_size = 2
-while kfold.has_next():
-
-    train, test = kfold.get_next()
-
-    if (len(words)//10) <= len(test):
-
-        ng = NGram(train, ngram_size=ngram_size, classification_number=100000)
-        ng.generate_counts()
-        list_window = ListWindow(test, ngram_size-1)
-
-        counter = 0
-        counter_skip = counter+ngram_size-1
-
-        total = 0
-        correct = 0
-        unseens = 0
-
-        while counter_skip < len(test) and list_window.has_next():
-            w_list = list_window.get_next()
-
-            guess_words = ng.classify(w_list)
-            actual_word = words[counter_skip]
-
-            if guess_words == False:
-                unseens += 1
-            else:
-                for word, count in guess_words:
-                    if word == actual_word:
-                        correct += 1
-                        break
-
-            counter += 1
-            counter_skip += 1
-            total += 1
-
-        print correct
-        print correct / len(test)
-        print unseens
-        print '-----'
+ngram_csv = []
+unseens_csv = []
 
 
 
+for class_number in [1,5,10,20]:
+    for ngram_size in [2,3,4,5]:
 
-# ng = NGram(words, ngram_size=ngram_size)
-# ng.generate_counts()
-# list_window = ListWindow(words, ngram_size-1)
-#
-# counter = 0
-# counter_skip = counter+ngram_size-1
-# correct = 0
-# while counter_skip < len(words) and list_window.has_next():
-#     w_list = list_window.get_next()
-#
-#     guess_word = ng.classify(w_list)
-#     actual_word = words[counter_skip]
-#
-#     if guess_word == actual_word:
-#         correct += 1
-#
-#     counter += 1
-#     counter_skip += 1
-#
-# print correct
-# print correct / len(words)
+        fold_step = len(words)//10
+        kfold = KFold(words, step=fold_step)
 
+        total_correct = 0
+        total_tested = 0
+        total_unseen = 0
+        while kfold.has_next():
 
+            train, test = kfold.get_next()
 
+            if fold_step <= len(test):
 
-# while kfold.has_next():
-#     train, test = kfold.get_next()
-#
-#     print train
-#
-#     ng = NGram(train, ngram_size=ngram_size)
-#     ng.generate_counts()
-#     list_window = ListWindow(test, ngram_size-1)
-#
-#     w = list_window.get_next()
-#     # print 'foo'
-#     # print w
-#     ng.classify(w)
-#     # break
+                ng = NGram(train, ngram_size=ngram_size, classification_number = class_number)
+                ng.generate_counts()
 
+                counter = 0
+                counter_skip = counter+ngram_size-1
+
+                total = 0
+                correct = 0
+                unseens = 0
+
+                while counter_skip < len(test):
+
+                    w_list = test[counter:counter_skip]
+
+                    guess_words = ng.classify(w_list)
+                    actual_word = test[counter_skip]
+
+                    if guess_words == False:
+                        unseens += 1
+                    else:
+                        for word, count in guess_words:
+                            if word == actual_word:
+                                correct += 1
+                                break
+
+                    counter += 1
+                    counter_skip += 1
+                    total += 1
+
+                total_correct += correct
+                total_tested += total
+                total_unseen += unseens
+
+        ngram_csv.append(str(ngram_size)+","+str(class_number)+","+str(round(total_correct / total_tested, 3)))
+        unseens_csv.append(str(round(total_unseen / total_tested, 3)))
+
+for i in ngram_csv:
+    print i
+
+for i in unseens_csv:
+    print i
